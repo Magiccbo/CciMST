@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   repos="svn+ssh://localhost/usr/local/svn/repos"
+   revision="591"
+   url="svn+ssh://localhost/usr/local/svn/repos/MatlabLibraries/matlab_bgl/doc/html/images"
+   last-author="dgleich"
+   uuid="69bc2549-4e17-0410-bea5-b14d52f56ae2"
+   committed-date="2007-03-01T23:44:38.047960Z"
+   name=""
+   kind="dir"
+   committed-rev="527"/>
+<entry
+   checksum="1684b8086bc464949d4167c5e880d07c"
+   last-author="dgleich"
+   prop-time="2007-03-01T23:56:32.000000Z"
+   text-time="2007-03-01T23:44:38.000000Z"
+   committed-date="2007-03-01T23:44:38.047960Z"
+   name="matlab-bgl-header.png"
+   kind="file"
+   committed-rev="527"/>
+</wc-entries>

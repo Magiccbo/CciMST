@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   repos="svn+ssh://localhost/usr/local/svn/repos"
+   revision="593"
+   url="svn+ssh://localhost/usr/local/svn/repos/MatlabLibraries/matlab_bgl/doc/html/reweighted_graphs"
+   last-author="dgleich"
+   committed-date="2007-07-13T23:27:02.121000Z"
+   name=""
+   kind="dir"
+   committed-rev="593"/>
+<entry
+   checksum="3c3f7ad720135dc9bffc677116569966"
+   last-author="dgleich"
+   text-time="2007-07-13T20:07:52.000000Z"
+   committed-date="2007-07-13T23:27:02.121000Z"
+   name="reweighted_graphs.html"
+   kind="file"
+   committed-rev="593"/>
+</wc-entries>

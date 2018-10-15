@@ -1,0 +1,9 @@
+K 10
+svn:ignore
+V 29
+
+*.mexglx
+*.mexa64
+Thumbs.db
+
+END

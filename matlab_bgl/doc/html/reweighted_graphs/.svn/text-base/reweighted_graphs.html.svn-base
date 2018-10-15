@@ -1,0 +1,526 @@
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Reweighted graphs in MatlabBGL</title>
+      <meta name="generator" content="MATLAB 7.5">
+      <meta name="date" content="2007-07-13">
+      <meta name="m-file" content="reweighted_graphs">
+      <link rel="stylesheet" type="text/css" href="../site.css"><style>
+
+body {
+  background: white;
+  color: black;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+pre.codeinput {
+  margin-left: 20px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  background-color: #bbbbbb;
+  border: solid 1px;
+  font-size: 10pt;
+  width: 620px;
+}
+
+p
+{
+	margin: 10px;
+}
+
+hr
+{
+    color: #bbbbbb;
+    height: 4;
+}
+
+.main
+{
+	border-left-style: solid;
+	margin-left: 100px;	
+	width: 650px;
+}
+
+.upwhitesq
+{
+    position: relative;
+    left: -5px;
+    top: -8px;
+    background: white;  
+}
+.downwhitesq
+{
+    position: relative;
+    left: 95px;
+    bottom: 10px;
+    background: white;  
+}
+
+img
+{
+	text-align: center;
+}
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.showbuttons {
+  margin-left: 30px;
+  border: solid black 2px;
+  padding: 4px;
+  background: #EBEFF3;
+}
+
+pre.codeoutput {
+  margin-left: 20px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  font-size: 10pt;
+  width: 520px;
+}
+
+pre.error {
+  color: red;
+}
+
+.intro {
+  width: 650px;
+}
+
+    </style></head>
+   <body>
+      <h1>Reweighted graphs in MatlabBGL</h1>
+      <introduction>
+         <div class="intro">
+            <p>Matlab sparse matrices only support non-zero values. Because the structure of the sparse matrix is used to infer the edges
+               of an underlying graph this limitation prevents MatlabBGL from trivially addressing graphs with 0-weight edges.
+            </p>
+            <p>To fix this problem, codes that accept a weighted graph allow the user to specify a vector of edge weights for each edge in
+               the graph using the optional 'weights' parameter.  Using the 'weights' parameter correctly can be difficult due to issues
+               with how edges are indexed in MatlabBGL.
+            </p>
+         </div>
+      </introduction>
+      <h2>Contents</h2>
+      <div>
+         <ul>
+            <li><a href="#1">A first attempt</a></li>
+            <li><a href="#8">A first solution</a></li>
+            <li><a href="#13">A simplified solution</a></li>
+            <li><a href="#14">An undirected solution</a></li>
+            <li><a href="#15">The undirected simplification</a></li>
+            <li><a href="#17">Computing the weight of a path</a></li>
+            <li><a href="#18">Summary</a></li>
+         </ul>
+      </div>
+      <div class="main">
+         <h2>A first attempt<a name="1"></a></h2>
+         <p>A trivial example graph to illustrate the problem that occurs with 0 weighted graphs occurs even with a simple cycle.  Suppose
+            that the graph corresponding to adjacency matrix A is a symmetric cycle where all edges have weight 0 except for one edge
+            between vertices (1,2).
+         </p>
+         <p>n will be the total size of the graph, and u and v will be the special vertices connected with a weight one edge.</p><pre class="codeinput">n = 8; <span class="comment">% it's just an example, so let's make it small.</span>
+u = 1;
+v = 2;
+</pre><p>These commands create an undirected cycle graph.  The cycle is ... n <a href="-">-</a> 1 <a href="-">-</a> 2 <a href="-">-</a> ... <a href="-">-</a> n-1 <a href="-">-</a> n <a href="-">-</a> 1 ... where the weight on every edge is 0 except for the edge between vertex u,v.  Notice that the edge list is already symmetric.
+         </p><pre class="codeinput">E = [1:n 2:n 1; 2:n 1 1:n]';
+w = [1 zeros(1,n-1) 1 zeros(1,n-1)]';
+
+A = sparse(E(:,1), E(:,2), w, n, n);
+</pre><p>The shortest weighted path between u and v is then through the vertex n because traversing the cycle in the other direction
+            will use the u,v edge of weight 1.  Let's check this with the shortest_paths function.
+         </p><pre class="codeinput">[d pred] = shortest_paths(A,u);
+d(v)
+</pre><pre class="codeoutput">
+ans =
+
+     1
+
+</pre><p>That is weird, there is a u-v path of length 0 in the graph!  Let's see what path the shortest path algorithm chose.</p><pre class="codeinput">path_from_pred(pred,v)
+</pre><pre class="codeoutput">
+ans =
+
+     1     2
+
+</pre><p>The path it chose was from u to v directly, taking the weight 1 edge. Let's look at the sparse matrix.</p><pre class="codeinput">A
+</pre><pre class="codeoutput">
+A =
+
+   (2,1)        1
+   (1,2)        1
+
+</pre><p>There are only two edges in the matrix corresponding to our symmetric weight 1 edge between u and v.  This happens because
+            Matlab removes all 0 weight edges from the graph.
+         </p>
+         <hr>
+         <div class="upwhitesq">&nbsp;</div>
+         <h2>A first solution<a name="8"></a></h2>
+         <p>The solution to the problem is to use the 'edge_weight' optional parameter to the shortest_paths function to give it a set
+            of weights to use for each edge.
+         </p><pre class="codeinput">help <span class="string">shortest_paths</span>
+</pre><pre class="codeoutput">  SHORTEST_PATHS Compute the weighted single source shortest path problem.
+ 
+  [d pred] = shortest_paths(A,u) returns the distance (d) and the predecessor
+  (pred) for each of the vertices along the shortest path from u to every
+  other vertex in the graph.  
+  
+  ... = shortest_paths(A,u,options) sets optional parameters (see 
+  set_matlab_bgl_options) for the standard options.
+    options.algname: the algorithm to use 
+        [{'auto'} | 'dijkstra' | 'bellman_ford' | 'dag']
+    options.inf: the value to use for unreachable vertices 
+        [double &gt; 0 | {Inf}]
+    options.target: a special vertex that will stop the search when hit
+        [{'none'} | any vertex number besides the u]; target is ignored if
+        visitor is set.
+    options.visitor: a structure with visitor callbacks.  This option only
+        applies to dijkstra or bellman_ford algorithms.  See dijkstra_sp or
+        bellman_ford_sp for details on the visitors.
+    options.edge_weight: a double array over the edges with an edge
+        weight for each node, see EDGE_INDEX and EXAMPLES/REWEIGHTED_GRAPHS
+        for information on how to use this option correctly
+        [{'matrix'} | length(nnz(A)) double vector]
+ 
+  Note: if you need to compute shortest paths with 0 weight edges, you must
+  use an edge_weight vector, see the examples for details.
+ 
+  Note: 'auto' cannot be used with 'nocheck' = 1.  The 'auto' algorithm
+  checks if the graph has negative edges and uses bellman_ford in that
+  case, otherwise, it uses 'dijkstra'.  In the future, it may check if the
+  graph is a dag and use 'dag'.  
+ 
+  Example:
+     load graphs/clr-25-2.mat
+     shortest_paths(A,1)
+     shortest_paths(A,1,struct('algname','bellman_ford'))
+ 
+  See also DIJKSTRA_SP, BELLMAN_FORD_SP, DAG_SP
+
+</pre><p>Well, shortest_paths says to read this document, so you are on the right track!  It also has a pointer to the function edge_weight_index.
+             Let's look at that function
+         </p><pre class="codeinput">help <span class="string">edge_weight_index</span>
+</pre><pre class="codeoutput">  EDGE_WEIGHT_INDEX Build a conformal matrix of edge index values for a graph.
+ 
+  [eil Ei] = edge_weight_index(As) returns a vector where 
+    As(i,j) not= 0 implies Ei(i,j) not= 0 and Ei(i,j) = eil(i)
+  for an integer value of eil(i) that corresponds to the edge index value
+  passed in the visitors.  
+ 
+  The input matrix A should be a structural matrix with a non-zero value
+  for each edge.  The matrix Ei gives an index for each edge in the graph,
+  and the vector eil will reorder a vector of edge weights to an appropriate
+  input for 'edge_weight' parameter of a function call.
+ 
+  The edge_weight_index function assists writing codes that use the
+  edge_weight parameter to reweight a graph based on a vector of weights
+  for the graph or using the ei parameter from an edge visitor.  It is 
+  critical to obtain high performance when
+ 
+  i) constructing algorithms that use 0 weighted edges
+  ii) constructing algorithms that change edge weights often.
+ 
+  See the examples reweighted_edges and edge_index_visitor for more
+  information.
+ 
+  ... = edge_weight_index(A,optionsu) sets optional parameters (see 
+  set_matlab_bgl_options) for the standard options.
+     options.undirected: output edge indices for an undirected graph [{0} | 1]
+         see Note 1.
+ 
+  Note 1: For an undirected graph, the edge indices of the edge corresponding
+  to (u,v) and (v,u) are the same.  Consequently, Ei is a symmetric matrix,
+  using this option allows only one value for an undirected edge.
+ 
+  Example:
+    load('graphs/bfs_example.mat');
+    eil = edge_weight_index(A,struct('directed',0));
+    edge_rand = rand(num_edges(A)/2,1);
+    [iu ju] = find(triu(A,0));
+    Av = sparse(iu,ju,edge_rand,size(A,1),size(A,1)); Av = Av + Av';
+    ee = @(ei,u,v) fprintf('examine_edge %2i, %1i, %1i, %4f, %4f, %4f\n', ...
+                ei, u, v, edge_rand(eil(ei)), Av(u,v), edge_rand(Ei(u,v)));
+    breadth_first_search(A,1,struct('examine_edge', ee));
+ 
+  See also INDEXED_SPARSE
+
+</pre><p>This function claims to help us.  It requires building a structural matrix which has a non-zero for each edge in the graph.
+             Let's do that.
+         </p><pre class="codeinput">As = sparse(E(:,1), E(:,2), 1, n, n)
+</pre><pre class="codeoutput">
+As =
+
+   (2,1)        1
+   (8,1)        1
+   (1,2)        1
+   (3,2)        1
+   (2,3)        1
+   (4,3)        1
+   (3,4)        1
+   (5,4)        1
+   (4,5)        1
+   (6,5)        1
+   (5,6)        1
+   (7,6)        1
+   (6,7)        1
+   (8,7)        1
+   (1,8)        1
+   (7,8)        1
+
+</pre><p>Now the matrix has all of the required edges.  According to the edge_weight_index function, it returns both a matrix and an
+            index vector. The index vector is a way to permute an intelligently ordered set of edge weights to the order that MatlabBGL
+            requires the edge weights.
+         </p><pre class="codeinput">[ei Ei] = edge_weight_index(As);
+
+full(Ei)
+ei
+</pre><pre class="codeoutput">
+ans =
+
+     0     3     0     0     0     0     0    15
+     1     0     5     0     0     0     0     0
+     0     4     0     7     0     0     0     0
+     0     0     6     0     9     0     0     0
+     0     0     0     8     0    11     0     0
+     0     0     0     0    10     0    13     0
+     0     0     0     0     0    12     0    16
+     2     0     0     0     0     0    14     0
+
+
+ei =
+
+     3
+    15
+     1
+     5
+     4
+     7
+     6
+     9
+     8
+    11
+    10
+    13
+    12
+    16
+     2
+    14
+
+</pre><p>Now let's create a new edge weight vector for this graph corresponding to all the edges we want.  Each non-zero in the matrix
+            should have an associated edge weight.  Most the edge weights in this case are 0, so it makes it simple.
+         </p><pre class="codeinput">ew = zeros(nnz(As),1);
+ew(Ei(u,v)) = 1;
+ew(Ei(v,u)) = 1;
+
+[d pred] = shortest_paths(As,u,struct(<span class="string">'edge_weight'</span>, ew(ei)));
+
+path_from_pred(pred,v)
+</pre><pre class="codeoutput">
+ans =
+
+     1     8     7     6     5     4     3     2
+
+</pre><hr>
+         <div class="upwhitesq">&nbsp;</div>
+         <h2>A simplified solution<a name="13"></a></h2>
+         <hr>
+         <div class="upwhitesq">&nbsp;</div>
+         <h2>An undirected solution<a name="14"></a></h2>
+         <p>The situation for undirected graphs is more complicated.  The trouble with the previous solution is that each directed edge
+            had its own weight in the vector w.  For an undirected graph, we really want each undirected edge to have a single weight,
+            so the natural length of v would be nnz(A)/2 instead of nnz(A).
+         </p>
+         <p>However, MatlabBGL really treats all problems as directed graphs, so it will need a vector w of length nnz(A), but that vector
+            should satisfy the requirement w(ei1) = w(ei2) if the edges corresponding to ei1 and ei2 are (i,j) and (j,i), respectively.
+         </p>
+         <p>Again, the edge_index function provides a solution to this problem.</p>
+         <hr>
+         <div class="upwhitesq">&nbsp;</div>
+         <h2>The undirected simplification<a name="15"></a></h2>
+         <p>You can probably guess that the simplification for undirected graphs will use the zero-weighted</p><pre class="codeinput">help <span class="string">edge_index</span>
+</pre><pre class="codeoutput">
+edge_index not found.
+
+Use the Help browser Search tab to search the documentation, or
+type "help help" for help command options, such as help for methods.
+
+</pre><p>From the documentation, we can</p>
+         <hr>
+         <div class="upwhitesq">&nbsp;</div>
+         <h2>Computing the weight of a path<a name="17"></a></h2>
+         <hr>
+         <div class="upwhitesq">&nbsp;</div>
+         <h2>Summary<a name="18"></a></h2>
+         <p>The functions that support reweighted edges as of MatlabBGL 2.5 are shortest_paths, all_shortest_paths, dijkstra_sp, bellman_ford_sp,
+            dag_sp, betweenness_centrality, astar_search, johnson_all_sp, floyd_warshall_all_sp, mst, kruskal_mst, prim_mst, and max_flow.
+         </p>
+         <p>The functions that assist working with the edge indices for the edge_weight vector are edge_weight_index and zero_weighted_matrix</p>
+         <hr>
+         <div class="upwhitesq">&nbsp;</div>
+      </div>
+      <div class="downwhitesq">&nbsp;</div>
+      <!--
+##### SOURCE BEGIN #####
+%% Reweighted graphs in MatlabBGL
+% Matlab sparse matrices only support non-zero values. Because the
+% structure of the sparse matrix is used to infer the edges of an
+% underlying graph this limitation prevents MatlabBGL from trivially 
+% addressing graphs with 0-weight edges.
+%
+% To fix this problem, codes that accept a weighted graph allow the user to
+% specify a vector of edge weights for each edge in the graph using the
+% optional 'weights' parameter.  Using the 'weights' parameter correctly
+% can be difficult due to issues with how edges are indexed in MatlabBGL.
+
+%% A first attempt
+% A trivial example graph to illustrate the problem that occurs with 0
+% weighted graphs occurs even with a simple cycle.  Suppose that the graph
+% corresponding to adjacency matrix A is a symmetric cycle where all edges
+% have weight 0 except for one edge between vertices (1,2).
+
+%%
+% n will be the total size of the graph, and u and v will be the special
+% vertices connected with a weight one edge.
+
+n = 8; % it's just an example, so let's make it small.
+u = 1;
+v = 2;
+
+%%
+% These commands create an undirected cycle graph.  The cycle is 
+% ... n <-> 1 <-> 2 <-> ... <-> n-1 <-> n <-> 1 ...
+% where the weight on every edge is 0 except for the edge between vertex
+% u,v.  Notice that the edge list is already symmetric.  
+
+E = [1:n 2:n 1; 2:n 1 1:n]';
+w = [1 zeros(1,n-1) 1 zeros(1,n-1)]';
+
+A = sparse(E(:,1), E(:,2), w, n, n);
+
+%%
+% The shortest weighted path between u and v is then through the vertex 
+% n because traversing the cycle in the other direction will use the 
+% u,v edge of weight 1.  Let's check this with the shortest_paths function.
+
+[d pred] = shortest_paths(A,u);
+d(v)
+
+%%
+% That is weird, there is a u-v path of length 0 in the graph!  Let's see
+% what path the shortest path algorithm chose.
+
+path_from_pred(pred,v)
+
+%%
+% The path it chose was from u to v directly, taking the weight 1 edge.
+% Let's look at the sparse matrix.
+
+A
+
+%%
+% There are only two edges in the matrix corresponding to our symmetric
+% weight 1 edge between u and v.  This happens because Matlab removes all 0
+% weight edges from the graph.  
+
+%% A first solution
+% The solution to the problem is to use the 'edge_weight' optional
+% parameter to the shortest_paths function to give it a set of weights 
+% to use for each edge.  
+
+help shortest_paths
+
+%% 
+% Well, shortest_paths says to read this document, so you are on the right
+% track!  It also has a pointer to the function edge_weight_index.  Let's
+% look at that function
+
+help edge_weight_index
+
+%%
+% This function claims to help us.  It requires building a structural
+% matrix which has a non-zero for each edge in the graph.  Let's do that.
+
+As = sparse(E(:,1), E(:,2), 1, n, n)
+
+%%
+% Now the matrix has all of the required edges.  According to the
+% edge_weight_index function, it returns both a matrix and an index vector.
+% The index vector is a way to permute an intelligently ordered set of edge
+% weights to the order that MatlabBGL requires the edge weights.  
+
+[ei Ei] = edge_weight_index(As);
+
+full(Ei)
+ei
+
+%%
+% Now let's create a new edge weight vector for this graph corresponding to
+% all the edges we want.  Each non-zero in the matrix should have an
+% associated edge weight.  Most the edge weights in this case are 0, so it
+% makes it simple.  
+
+ew = zeros(nnz(As),1);
+ew(Ei(u,v)) = 1;
+ew(Ei(v,u)) = 1;
+
+[d pred] = shortest_paths(As,u,struct('edge_weight', ew(ei)));
+
+path_from_pred(pred,v)
+
+%% A simplified solution
+%
+
+%% An undirected solution
+% The situation for undirected graphs is more complicated.  The trouble
+% with the previous solution is that each directed edge had its own weight
+% in the vector w.  For an undirected graph, we really want each undirected
+% edge to have a single weight, so the natural length of v would be
+% nnz(A)/2 instead of nnz(A).
+%
+% However, MatlabBGL really treats all problems as directed graphs, so it
+% will need a vector w of length nnz(A), but that vector should satisfy the
+% requirement w(ei1) = w(ei2) if the edges corresponding to ei1 and ei2 are
+% (i,j) and (j,i), respectively.  
+%
+% Again, the edge_index function provides a solution to this problem.
+
+%% The undirected simplification
+% You can probably guess that the simplification for undirected graphs will
+% use the zero-weighted 
+
+help edge_index
+
+%% 
+% From the documentation, we can 
+
+%% Computing the weight of a path
+%
+
+%% Summary
+% The functions that support reweighted edges as of MatlabBGL 2.5 are 
+% shortest_paths, all_shortest_paths, dijkstra_sp, bellman_ford_sp, dag_sp,
+% betweenness_centrality, astar_search, johnson_all_sp,
+% floyd_warshall_all_sp, mst, kruskal_mst, prim_mst, and max_flow.
+
+%%
+% The functions that assist working with the edge indices for the
+% edge_weight vector are edge_weight_index and zero_weighted_matrix
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

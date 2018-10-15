@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   revision="593"
+   repos="svn+ssh://localhost/usr/local/svn/repos"
+   url="svn+ssh://localhost/usr/local/svn/repos/MatlabLibraries/matlab_bgl/doc/html/core_numbers_example"
+   last-author="dgleich"
+   committed-date="2007-07-13T23:27:02.121000Z"
+   kind="dir"
+   name=""
+   committed-rev="593"/>
+<entry
+   checksum="4975a5a46a0f5400dc66fc41ac597ff7"
+   last-author="dgleich"
+   text-time="2007-07-13T20:07:42.000000Z"
+   committed-date="2007-07-13T23:27:02.121000Z"
+   name="core_numbers_example.html"
+   kind="file"
+   committed-rev="593"/>
+<entry
+   checksum="bf8e18bbf5753bd87c53899cc3f4f65a"
+   last-author="dgleich"
+   prop-time="2007-07-13T23:26:40.000000Z"
+   text-time="2007-07-13T20:07:42.000000Z"
+   committed-date="2007-07-13T23:27:02.121000Z"
+   name="core_numbers_example.png"
+   kind="file"
+   committed-rev="593"/>
+<entry
+   checksum="d778808703f134a6f269422405952199"
+   last-author="dgleich"
+   prop-time="2007-07-13T23:26:40.000000Z"
+   text-time="2007-07-13T20:07:40.000000Z"
+   committed-date="2007-07-13T23:27:02.121000Z"
+   kind="file"
+   name="core_numbers_example_01.png"
+   committed-rev="593"/>
+<entry
+   checksum="40f1c3f3f1d966c12f2922673bd25840"
+   last-author="dgleich"
+   prop-time="2007-07-13T23:26:40.000000Z"
+   text-time="2007-07-13T20:07:41.000000Z"
+   committed-date="2007-07-13T23:27:02.121000Z"
+   kind="file"
+   name="core_numbers_example_02.png"
+   committed-rev="593"/>
+</wc-entries>

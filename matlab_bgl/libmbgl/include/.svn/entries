@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   revision="572"
+   repos="svn+ssh://localhost/usr/local/svn/repos"
+   url="svn+ssh://localhost/usr/local/svn/repos/MatlabLibraries/matlab_bgl/libmbgl/include"
+   last-author="dgleich"
+   prop-time="2006-11-08T20:04:34.000000Z"
+   uuid="69bc2549-4e17-0410-bea5-b14d52f56ae2"
+   committed-date="2007-07-06T22:35:27.418786Z"
+   kind="dir"
+   name=""
+   committed-rev="572"/>
+<entry
+   revision="592"
+   checksum="7084c048a16a16223a91dd5805390644"
+   last-author="dgleich"
+   prop-time="2006-06-29T02:59:43.000000Z"
+   text-time="2007-07-12T19:47:12.000000Z"
+   committed-date="2007-07-13T17:51:58.898000Z"
+   kind="file"
+   name="matlab_bgl.h"
+   committed-rev="592"/>
+<entry
+   checksum="91042bc0ef73c10b39562e76c1daee1f"
+   last-author="dgleich"
+   text-time="2007-04-18T21:48:23.000000Z"
+   committed-date="2007-04-19T03:31:14.783616Z"
+   kind="file"
+   name="matlab_bgl_types.h"
+   committed-rev="549"/>
+</wc-entries>

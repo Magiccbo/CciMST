@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   repos="svn+ssh://localhost/usr/local/svn/repos"
+   revision="591"
+   url="svn+ssh://localhost/usr/local/svn/repos/MatlabLibraries/matlab_bgl/doc/html/record_alg"
+   last-author="dgleich"
+   prop-time="2006-11-08T20:04:34.000000Z"
+   uuid="69bc2549-4e17-0410-bea5-b14d52f56ae2"
+   committed-date="2006-11-08T20:07:29.473217Z"
+   name=""
+   kind="dir"
+   committed-rev="448"/>
+<entry
+   revision="593"
+   checksum="462b53a0b5e8763814c0b5446817ce18"
+   last-author="dgleich"
+   text-time="2007-07-13T20:07:38.000000Z"
+   committed-date="2007-07-13T23:27:02.121000Z"
+   name="record_alg.html"
+   kind="file"
+   committed-rev="593"/>
+</wc-entries>
